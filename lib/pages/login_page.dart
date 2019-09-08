@@ -1,12 +1,28 @@
+import 'package:carros/pages/home_page.dart';
+import 'package:carros/pages/login_api.dart';
+import 'package:carros/utils/nav.dart';
+import 'package:carros/widgets/app_button.dart';
+import 'package:carros/widgets/app_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
 
-  final _tLogin = TextEditingController();
-  final _tSenha = TextEditingController();
+class _LoginPageState extends State<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
 
-  final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
+  final _tLogin = TextEditingController(text: "ricardo");
+
+  final _tSenha = TextEditingController(text: "123");
+
+  final _focusSenha = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,71 +30,50 @@ class LoginPage extends StatelessWidget {
       appBar: AppBar(
         title: Text("Carros"),
       ),
-      body: Padding(padding: EdgeInsets.all(16),
-      child: _body(),),
+      body: _body(),
     );
-  }
-
-  String _validateLogin(String text){
-    if(text.isEmpty){
-      return "Informe o login";
-    }
-    return null;
-  }
-
-  String _validateSenha(String text){
-    if(text.isEmpty){
-      return "Informe a senha";
-    }
-    if(text.length <= 2){
-      return "Senha precisa ter mais de 2 números";
-    }
-    return null;
   }
 
   _body() {
     return Form(
       key: _formKey,
-      child: ListView(
-        children: <Widget>[
-          TextFormField(
-            controller: _tLogin,
-            validator: _validateLogin,
-            keyboardType: TextInputType.text,
-            style: TextStyle(color: Colors.blue, fontSize: 25),
-            decoration: InputDecoration(
-              labelText: "Login",
-              labelStyle: TextStyle(color: Colors.black, fontSize: 25),
-              hintText: "Digite seu login",
-              hintStyle: TextStyle(color: Colors.black, fontSize: 18)
+      child: Container(
+        padding: EdgeInsets.all(16),
+        child: ListView(
+          children: <Widget>[
+            AppText(
+              "Login",
+              "Digite o login",
+              controller: _tLogin,
+              validator: _validateLogin,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
+              nextFocus: _focusSenha,
             ),
-          ),
-          TextFormField(
-            controller: _tSenha,
-            validator: _validateSenha,
-            obscureText: true,
-            keyboardType: TextInputType.number,
-            style: TextStyle(color: Colors.blue, fontSize: 25),
-            decoration: InputDecoration(
-              labelText: "Senha",
-              labelStyle: TextStyle(color: Colors.black, fontSize: 25),
-              hintText: "Digite a sua senha",
-              hintStyle: TextStyle(color: Colors.black, fontSize: 18)
+            SizedBox(height: 10),
+            AppText(
+              "Senha",
+              "Digite a senha",
+              controller: _tSenha,
+              password: true,
+              validator: _validateSenha,
+              keyboardType: TextInputType.number,
+              focusNode: _focusSenha,
             ),
-          ),
-          Container(
-            height: 50,
-            margin: EdgeInsets.only(top: 20),
-            child: RaisedButton(
-              child: Text("Login", style: TextStyle(color: Colors.white, fontSize: 25),),
-              onPressed: _onLoginClick
-          ),)
-        ],
+            SizedBox(
+              height: 20,
+            ),
+            AppButton(
+              "Login",
+              onPressed: _onClickLogin,
+            ),
+          ],
+        ),
       ),
     );
   }
-  
-  void _onLoginClick(){
+
+  void _onClickLogin() async{
     final login = _tLogin.text;
     final senha = _tSenha.text;
 
@@ -86,5 +81,33 @@ class LoginPage extends StatelessWidget {
       return;
     }
     print("Login");
+    bool ok = await LoginApi.login(login, senha);
+    if (ok) {
+      push(context, HomePage());
+    }else{
+      print("Login incorreto.");
+    }
+  }
+
+  String _validateLogin(String text) {
+    if (text.isEmpty) {
+      return "Digite o login";
+    }
+    return null;
+  }
+
+  String _validateSenha(String text) {
+    if (text.isEmpty) {
+      return "Digite a senha";
+    }
+    if (text.length < 3) {
+      return "A senha precisa ter pelo menos 3 números";
+    }
+    return null;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }
