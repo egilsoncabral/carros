@@ -1,5 +1,8 @@
+import 'package:carros/pages/api_response.dart';
 import 'package:carros/pages/home_page.dart';
 import 'package:carros/pages/login_api.dart';
+import 'package:carros/pages/usuario.dart';
+import 'package:carros/utils/alert.dart';
 import 'package:carros/utils/nav.dart';
 import 'package:carros/widgets/app_button.dart';
 import 'package:carros/widgets/app_text.dart';
@@ -19,6 +22,8 @@ class _LoginPageState extends State<LoginPage> {
 
   final _focusSenha = FocusNode();
 
+  bool _showProgress = false;
+
   @override
   void initState() {
     super.initState();
@@ -35,6 +40,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   _body() {
+    _showProgress = false;
     return Form(
       key: _formKey,
       child: Container(
@@ -66,6 +72,7 @@ class _LoginPageState extends State<LoginPage> {
             AppButton(
               "Login",
               onPressed: _onClickLogin,
+              showProgress: _showProgress,
             ),
           ],
         ),
@@ -73,7 +80,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _onClickLogin() async{
+  void _onClickLogin() async {
     final login = _tLogin.text;
     final senha = _tSenha.text;
 
@@ -81,12 +88,22 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
     print("Login");
-    bool ok = await LoginApi.login(login, senha);
-    if (ok) {
-      push(context, HomePage());
-    }else{
-      print("Login incorreto.");
+    setState(() {
+      _showProgress = true; 
+    });
+
+    ApiResponse response = await LoginApi.login(login, senha);
+    if (response.ok) {
+      Usuario usuario = response.result;
+      print(">>> $usuario");
+      push(context, HomePage(), replace: true);
+    } else {
+      alert(context, response.msg);
     }
+
+     setState(() {
+      _showProgress = false; 
+    });
   }
 
   String _validateLogin(String text) {
